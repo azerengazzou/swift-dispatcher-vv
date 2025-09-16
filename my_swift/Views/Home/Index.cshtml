@@ -1,0 +1,51 @@
+﻿@using my_swift.Models
+@model List<SwiftCategory>
+
+@{
+	Layout = "_Layout";
+
+	ViewData["Title"] = "Home page";
+}
+
+<div class="text-center mb-5">
+	<h1 class="display-5">SWIFT MT Message Types</h1>
+	<h2 class="display-2">Categories & Common Messages</h2>
+</div>
+<main>
+    @foreach (var category in Model)
+    {
+        <div id="@category.Id" class="mb-5">
+            <h2 class="h5">@category.Title :</h2>
+
+            <div class="accordion" id="accordion-@category.Id">
+                @for (int i = 0; i < category.Messages.Count; i++)
+                {
+                    var msg = category.Messages[i];
+                    var collapseId = $"collapse-{category.Id}-{i}";
+                    var headingId = $"heading-{category.Id}-{i}";
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="@headingId">
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#@collapseId"
+                                    aria-expanded="false"
+                                    aria-controls="@collapseId">
+                                @msg.Code
+                            </button>
+                        </h2>
+                        <div id="@collapseId"
+                             class="accordion-collapse collapse"
+                             aria-labelledby="@headingId"
+                             data-bs-parent="#accordion-@category.Id">
+                            <div class="accordion-body">
+                                <div class="strong text-muted">@msg.Description</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</main>
