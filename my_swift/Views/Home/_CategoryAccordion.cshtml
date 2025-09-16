@@ -1,0 +1,36 @@
+﻿@using my_swift.Models
+@model SwiftCategory
+
+<div id="@Model.Id" class="mb-5">
+    <h2 class="h5">@Model.Title :</h2>
+
+    <div class="accordion" id="accordion-@Model.Id">
+        @for (int i = 0; i < Model.Messages.Count; i++)
+        {
+            var msg = Model.Messages[i];
+            var collapseId = $"collapse-{Model.Id}-{i}";
+            var headingId = $"heading-{Model.Id}-{i}";
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="@headingId">
+                    <button class="accordion-button collapsed"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#@collapseId"
+                            aria-expanded="false"
+                            aria-controls="@collapseId">
+                        @msg.Code
+                    </button>
+                </h2>
+                <div id="@collapseId"
+                     class="accordion-collapse collapse"
+                     aria-labelledby="@headingId"
+                     data-bs-parent="#accordion-@Model.Id">
+                    <div class="accordion-body">
+                        <div class="strong text-muted">@msg.Description</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -17,5 +17,19 @@ namespace my_swift.Controllers
             var categories = _swiftService.GetAllCategories();
             return View(categories);
         }
+
+        [HttpPost]
+        public IActionResult UploadTxtFile(string fileContent)
+        {
+            if (string.IsNullOrEmpty(fileContent))
+            {
+                TempData["Message"] = "File content is empty!";
+                return RedirectToAction("Index");
+            }
+
+            TempData["Message"] = "File content received successfully!";
+            return RedirectToAction("Index");
+        }
+
     }
 }

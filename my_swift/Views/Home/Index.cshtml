@@ -2,50 +2,88 @@
 @model List<SwiftCategory>
 
 @{
-	Layout = "_Layout";
-
-	ViewData["Title"] = "Home page";
+    Layout = "_Layout";
+    ViewData["Title"] = "Home page";
 }
 
 <div class="text-center mb-5">
-	<h1 class="display-5">SWIFT MT Message Types</h1>
-	<h2 class="display-2">Categories & Common Messages</h2>
+    <h1 class="display-5">SWIFT MT Message Types</h1>
+    <h2 class="display-2">Categories & Common Messages</h2>
 </div>
-<main>
-    @foreach (var category in Model)
-    {
-        <div id="@category.Id" class="mb-5">
-            <h2 class="h5">@category.Title :</h2>
 
-            <div class="accordion" id="accordion-@category.Id">
-                @for (int i = 0; i < category.Messages.Count; i++)
-                {
-                    var msg = category.Messages[i];
-                    var collapseId = $"collapse-{category.Id}-{i}";
-                    var headingId = $"heading-{category.Id}-{i}";
-
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="@headingId">
-                            <button class="accordion-button collapsed"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#@collapseId"
-                                    aria-expanded="false"
-                                    aria-controls="@collapseId">
-                                @msg.Code
-                            </button>
-                        </h2>
-                        <div id="@collapseId"
-                             class="accordion-collapse collapse"
-                             aria-labelledby="@headingId"
-                             data-bs-parent="#accordion-@category.Id">
-                            <div class="accordion-body">
-                                <div class="strong text-muted">@msg.Description</div>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
+<main class="container">
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-md-4">
+            @foreach (var category in Model)
+            {
+                @Html.Partial("_CategoryAccordion", category)
+            }
         </div>
-    }
+
+        <!-- Right Column -->
+        <div class="col-md-8">
+            <form id="uploadForm" asp-action="UploadTxtFile" method="post">
+                <div class="mb-3">
+                    <label for="txtFileInput" class="form-label">Upload TXT File</label>
+                    <input class="form-control" type="file" id="txtFileInput" accept=".txt">
+                </div>
+
+                <textarea class="form-control mb-3" id="txtFileContent" rows="20" readonly></textarea>
+
+                <!-- Hidden input to send content to controller -->
+                <input type="hidden" id="fileContentHidden" name="fileContent" />
+
+                <button type="button" class="btn btn-primary" id="submitBtn" disabled>Send to Server</button>
+            </form>
+        </div>
+
+
+
+    </div>
 </main>
+
+@section Scripts {
+    <script>
+                const fileInput = document.getElementById('txtFileInput');
+        const textarea = document.getElementById('txtFileContent');
+        const hiddenInput = document.getElementById('fileContentHidden');
+        const submitBtn = document.getElementById('submitBtn');
+        const form = document.getElementById('uploadForm');
+
+        // Handle file selection
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file && file.type === "text/plain") {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    textarea.value = content;        // show content to user
+                    hiddenInput.value = content;      // send content to controller
+                    submitBtn.disabled = false;       // enable send button
+                };
+                reader.readAsText(file);
+            } else {
+                textarea.value = "";
+                hiddenInput.value = "";
+                submitBtn.disabled = true;
+                alert("Please select a valid .txt file.");
+            }
+        });
+
+        // Separate function to send the form
+        function sendFileContent() {
+            if (!hiddenInput.value) {
+                alert("No file content to send!");
+                return;
+            }
+            console.log("test")
+            // Submit the form programmatically
+            form.submit();
+        }
+
+        // Attach function to button
+        submitBtn.addEventListener('click', sendFileContent);
+
+    </script>
+}
