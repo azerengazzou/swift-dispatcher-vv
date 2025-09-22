@@ -5,5 +5,7 @@ namespace my_swift.Services
     public interface ISwiftMessageService
     {
         List<SwiftCategory> GetAllCategories();
+        List<ParsedField> Parse(string fileName, string rawContent);
+
     }
 }

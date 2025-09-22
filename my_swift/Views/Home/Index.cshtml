@@ -23,67 +23,88 @@
 
         <!-- Right Column -->
         <div class="col-md-8">
-            <form id="uploadForm" asp-action="UploadTxtFile" method="post">
-                <div class="mb-3">
-                    <label for="txtFileInput" class="form-label">Upload TXT File</label>
-                    <input class="form-control" type="file" id="txtFileInput" accept=".txt">
-                </div>
+            <form id="uploadForm">
+                <label for="txtFileInput">Upload TXT File</label>
+                <input class="form-control" type="file" id="txtFileInput" accept=".txt">
 
-                <textarea class="form-control mb-3" id="txtFileContent" rows="20" readonly></textarea>
+                <!-- Raw content preview -->
+                <textarea class="form-control mb-3" id="txtFileContent" rows="10" readonly></textarea>
 
-                <!-- Hidden input to send content to controller -->
-                <input type="hidden" id="fileContentHidden" name="fileContent" />
+                <!-- Dynamic parsed fields -->
+                <div id="parsedFields" class="mt-3"></div>
 
-                <button type="button" class="btn btn-primary" id="submitBtn" disabled>Send to Server</button>
+                <button type="button" class="btn btn-primary mt-3" id="submitBtn" disabled>Send via AJAX</button>
             </form>
         </div>
-
-
-
     </div>
 </main>
 
 @section Scripts {
     <script>
-                const fileInput = document.getElementById('txtFileInput');
+        const fileInput   = document.getElementById('txtFileInput');
         const textarea = document.getElementById('txtFileContent');
-        const hiddenInput = document.getElementById('fileContentHidden');
         const submitBtn = document.getElementById('submitBtn');
-        const form = document.getElementById('uploadForm');
+        const parsedDiv = document.getElementById('parsedFields');
 
-        // Handle file selection
-        fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
+        let uploadObj = null;
+
+        fileInput.addEventListener('change', e => {
+            const file = e.target.files[0];
             if (file && file.type === "text/plain") {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    const content = e.target.result;
-                    textarea.value = content;        // show content to user
-                    hiddenInput.value = content;      // send content to controller
-                    submitBtn.disabled = false;       // enable send button
+                reader.onload = evt => {
+                    uploadObj = {
+                        fileName: file.name,
+                        size: file.size,
+                        content: evt.target.result
+                    };
+                    textarea.value = uploadObj.content;
+                    submitBtn.disabled = false;
                 };
                 reader.readAsText(file);
             } else {
                 textarea.value = "";
-                hiddenInput.value = "";
+                uploadObj = null;
                 submitBtn.disabled = true;
                 alert("Please select a valid .txt file.");
             }
         });
 
-        // Separate function to send the form
-        function sendFileContent() {
-            if (!hiddenInput.value) {
-                alert("No file content to send!");
-                return;
-            }
-            console.log("test")
-            // Submit the form programmatically
-            form.submit();
-        }
+        submitBtn.addEventListener('click', async () => {
+            if (!uploadObj) return alert("Choose a file first.");
 
-        // Attach function to button
-        submitBtn.addEventListener('click', sendFileContent);
+            const res = await fetch('/Home/ParseTxtFile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(uploadObj)
+            });
+
+            if (!res.ok) return alert(await res.text());
+
+            const data = await res.json(); // 👈 List<ParsedField>
+
+            // Clear old fields
+            parsedDiv.innerHTML = "";
+
+            // Render inputs
+            data.forEach(field => {
+                const group = document.createElement("div");
+                group.className = "mb-3";
+
+                const label = document.createElement("label");
+                label.className = "form-label fw-bold";
+                label.textContent = `${field.tag} – ${field.description}`;
+
+                const input = document.createElement("input");
+                input.type = "text";
+                input.className = "form-control";
+                input.value = field.value;
+
+                group.appendChild(label);
+                group.appendChild(input);
+                parsedDiv.appendChild(group);
+            });
+        });
 
     </script>
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using my_swift.Models;
 using my_swift.Services;
 
 namespace my_swift.Controllers
@@ -19,16 +20,28 @@ namespace my_swift.Controllers
         }
 
         [HttpPost]
-        public IActionResult UploadTxtFile(string fileContent)
+        public IActionResult ParseTxtFile([FromBody] FileUploadDto upload)
         {
-            if (string.IsNullOrEmpty(fileContent))
+            if (upload == null || string.IsNullOrWhiteSpace(upload.Content))
+                return BadRequest("File is empty");
+
+            // Service parses file content into multiple fields
+            var fields = _swiftService.Parse(upload.FileName, upload.Content);
+
+            return Ok(fields); // 👈 this is a List<ParsedField>
+        }
+
+
+        [HttpPost]
+        public IActionResult UploadTxtFile([FromBody] FileUploadDto upload)
+        {
+            if (upload == null || string.IsNullOrEmpty(upload.Content))
             {
-                TempData["Message"] = "File content is empty!";
-                return RedirectToAction("Index");
+                return BadRequest("File is empty");
             }
 
-            TempData["Message"] = "File content received successfully!";
-            return RedirectToAction("Index");
+            // do something with upload.Content / upload.FileName / upload.Size …
+            return Ok(new { message = $"Received '{upload.FileName}' ({upload.Size} bytes)" });
         }
 
     }
